@@ -1,0 +1,1965 @@
+(this["webpackJsonpchess"] = this["webpackJsonpchess"] || []).push([["main"],{
+
+/***/ "./src/components/Algorithms.jsx":
+/*!***************************************!*\
+  !*** ./src/components/Algorithms.jsx ***!
+  \***************************************/
+/*! exports provided: whoWins, changeCastlingIndicators, makeLegalMove, selectedPieceMoves */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* WEBPACK VAR INJECTION */(function(__react_refresh_utils__, __react_refresh_error_overlay__) {/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "whoWins", function() { return whoWins; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "changeCastlingIndicators", function() { return changeCastlingIndicators; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "makeLegalMove", function() { return makeLegalMove; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "selectedPieceMoves", function() { return selectedPieceMoves; });
+/* harmony import */ var _GeneralAlgorithms__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./GeneralAlgorithms */ "./src/components/GeneralAlgorithms.jsx");
+__webpack_require__.$Refresh$.runtime = __webpack_require__(/*! ./node_modules/react-refresh/runtime.js */ "./node_modules/react-refresh/runtime.js");
+__webpack_require__.$Refresh$.setup(module.i);
+
+//jshint esversion:6
+
+
+let castlingIndicators = {
+  whiteKingSide: true,
+  whiteQueenSide: true,
+  blackKingSide: true,
+  blackQueenSide: true
+};
+let whoWins = null;
+
+function ruleOfKnight(pieceCoord, board) {
+  let [rowCoord, colCoord] = pieceCoord;
+  let collectionOfMoves = [];
+  var rowIndex;
+  var colIndex;
+
+  for (rowIndex = -2; rowIndex <= 2; rowIndex++) {
+    for (colIndex = -2; colIndex <= 2; colIndex++) {
+      if (rowIndex != 0 && colIndex != 0) {
+        if (Math.abs(rowIndex) != Math.abs(colIndex)) {
+          if (rowCoord + rowIndex >= 0 && rowCoord + rowIndex <= 7 && colCoord + colIndex >= 0 && colCoord + colIndex <= 7) {
+            collectionOfMoves.push([rowCoord + rowIndex, colCoord + colIndex]);
+          }
+        }
+      }
+    }
+  }
+
+  return collectionOfMoves;
+}
+
+function ruleOfRook(pieceCoord, board) {
+  let colletionOfMoves = [];
+  let [rowCoord, colCoord] = pieceCoord;
+  let [rowCoordLeft, colCoordBot] = pieceCoord;
+  let [rowCoordRigt, colCoordTop] = pieceCoord;
+
+  while (rowCoordRigt < 7) {
+    rowCoordRigt++;
+    let cellOccupation = occupyingColour(rowCoordRigt, colCoord, board);
+
+    if (cellOccupation != " ") {
+      colletionOfMoves.push([rowCoordRigt, colCoord]);
+      break;
+    } else {
+      colletionOfMoves.push([rowCoordRigt, colCoord]);
+    }
+  }
+
+  while (rowCoordLeft > 0) {
+    rowCoordLeft--;
+    let cellOccupation = occupyingColour(rowCoordLeft, colCoord, board);
+
+    if (cellOccupation != " ") {
+      colletionOfMoves.push([rowCoordLeft, colCoord]);
+      break;
+    } else {
+      colletionOfMoves.push([rowCoordLeft, colCoord]);
+    }
+  }
+
+  while (colCoordTop < 7) {
+    colCoordTop++;
+    let cellOccupation = occupyingColour(rowCoord, colCoordTop, board);
+
+    if (cellOccupation != " ") {
+      colletionOfMoves.push([rowCoord, colCoordTop]);
+      break;
+    } else {
+      colletionOfMoves.push([rowCoord, colCoordTop]);
+    }
+  }
+
+  while (colCoordBot > 0) {
+    colCoordBot--;
+    let cellOccupation = occupyingColour(rowCoord, colCoordBot, board);
+
+    if (cellOccupation != " ") {
+      colletionOfMoves.push([rowCoord, colCoordBot]);
+      break;
+    } else {
+      colletionOfMoves.push([rowCoord, colCoordBot]);
+    }
+  }
+
+  return colletionOfMoves;
+}
+
+function ruleOfBishop(pieceCoord, board) {
+  let colletionOfMoves = [];
+  let [rowCoordLeft, colCoordBot] = pieceCoord;
+  let [rowCoordRigt, colCoordTop] = pieceCoord;
+
+  while (rowCoordRigt < 7 && colCoordTop < 7) {
+    rowCoordRigt++;
+    colCoordTop++;
+    let cellOccupation = occupyingColour(rowCoordRigt, colCoordTop, board);
+
+    if (cellOccupation != " ") {
+      colletionOfMoves.push([rowCoordRigt, colCoordTop]);
+      break;
+    } else {
+      colletionOfMoves.push([rowCoordRigt, colCoordTop]);
+    }
+  }
+
+  [rowCoordLeft, colCoordTop] = pieceCoord;
+
+  while (rowCoordLeft > 0 && colCoordTop < 7) {
+    rowCoordLeft--;
+    colCoordTop++;
+    let cellOccupation = occupyingColour(rowCoordLeft, colCoordTop, board);
+
+    if (cellOccupation != " ") {
+      colletionOfMoves.push([rowCoordLeft, colCoordTop]);
+      break;
+    } else {
+      colletionOfMoves.push([rowCoordLeft, colCoordTop]);
+    }
+  }
+
+  [rowCoordLeft, colCoordBot] = pieceCoord;
+
+  while (rowCoordLeft > 0 && colCoordBot > 0) {
+    colCoordBot--;
+    rowCoordLeft--;
+    let cellOccupation = occupyingColour(rowCoordLeft, colCoordBot, board);
+
+    if (cellOccupation != " ") {
+      colletionOfMoves.push([rowCoordLeft, colCoordBot]);
+      break;
+    } else {
+      colletionOfMoves.push([rowCoordLeft, colCoordBot]);
+    }
+  }
+
+  [rowCoordRigt, colCoordBot] = pieceCoord;
+
+  while (rowCoordRigt < 7 && colCoordBot > 0) {
+    colCoordBot--;
+    rowCoordRigt++;
+    let cellOccupation = occupyingColour(rowCoordRigt, colCoordBot, board);
+
+    if (cellOccupation != " ") {
+      colletionOfMoves.push([rowCoordRigt, colCoordBot]);
+      break;
+    } else {
+      colletionOfMoves.push([rowCoordRigt, colCoordBot]);
+    }
+  }
+
+  return colletionOfMoves;
+}
+
+function ruleOfQueen(pieceCoord, board) {
+  let diagonalMoves = ruleOfBishop(pieceCoord, board);
+  let straightMoves = ruleOfRook(pieceCoord, board);
+  let colletionOfMoves = diagonalMoves.concat(straightMoves);
+  return colletionOfMoves;
+}
+
+function ruleOfKing(pieceCoord, board) {
+  let colletionOfMoves = [];
+  let [rowCoord, colCoord] = pieceCoord;
+  let rowIndex;
+  let colIndex;
+
+  for (rowIndex = -1; rowIndex < 2; rowIndex++) {
+    for (colIndex = -1; colIndex < 2; colIndex++) {
+      if (rowIndex !== 0 || colIndex !== 0) {
+        if (rowCoord + rowIndex >= 0 && rowCoord + rowIndex <= 7 && colCoord + colIndex >= 0 && colCoord + colIndex <= 7) {
+          colletionOfMoves.push([rowCoord + rowIndex, colCoord + colIndex]);
+        }
+      }
+    }
+  }
+
+  return colletionOfMoves;
+}
+
+function pawnAttackingRange(pieceCoord, board) {
+  let attackingRange = [];
+  let [rowCoord, colCoord] = pieceCoord;
+  let pieceColour = occupyingColour(rowCoord, colCoord, board);
+
+  if (pieceColour == "W") {
+    if (rowCoord < 7) {
+      if (colCoord > 0) {
+        attackingRange.push([rowCoord + 1, colCoord - 1]);
+      }
+
+      if (colCoord < 7) {
+        attackingRange.push([rowCoord + 1, colCoord + 1]);
+      }
+    }
+  }
+
+  if (pieceColour == "B") {
+    if (rowCoord > 0) {
+      if (colCoord > 0) {
+        attackingRange.push([rowCoord - 1, colCoord - 1]);
+      }
+
+      if (colCoord < 7) {
+        attackingRange.push([rowCoord - 1, colCoord + 1]);
+      }
+    }
+  }
+
+  return attackingRange;
+}
+
+function selectedPieceAura(pieceCoord, board) {
+  let [rowCoord, colCoord] = pieceCoord;
+  let attackRange = [];
+  let pieceType = occupyingPiece(rowCoord, colCoord, board);
+
+  if (pieceType === "N") {
+    attackRange = ruleOfKnight(pieceCoord, board);
+  }
+
+  if (pieceType === "R") {
+    attackRange = ruleOfRook(pieceCoord, board);
+  }
+
+  if (pieceType === "B") {
+    attackRange = ruleOfBishop(pieceCoord, board);
+  }
+
+  if (pieceType === "P") {
+    attackRange = pawnAttackingRange(pieceCoord, board);
+  }
+
+  if (pieceType === "K") {
+    attackRange = ruleOfKing(pieceCoord, board);
+  }
+
+  if (pieceType === "Q") {
+    attackRange = ruleOfQueen(pieceCoord, board);
+  }
+
+  return attackRange;
+}
+
+function allAttackingRanges(selectedColour, board) {
+  let attackingRange = [];
+  let rowCoord;
+  let colCoord;
+
+  for (rowCoord = 0; rowCoord < 8; rowCoord++) {
+    for (colCoord = 0; colCoord < 8; colCoord++) {
+      if (occupyingColour(rowCoord, colCoord, board) == selectedColour) {
+        let range = selectedPieceAura([rowCoord, colCoord], board);
+
+        if (range.length !== 0) {
+          range.forEach(cellCoord => {
+            attackingRange.push(cellCoord);
+          });
+        }
+      }
+    }
+  }
+
+  return attackingRange;
+}
+
+function filterActualMoves(selectedColour, attackingRange, board) {
+  let legalMoves = [];
+  let pieceColour;
+  attackingRange.forEach(cellCoord => {
+    pieceColour = occupyingColour(cellCoord[0], cellCoord[1], board);
+
+    if (pieceColour !== selectedColour) {
+      legalMoves.push(cellCoord);
+    }
+  });
+  return legalMoves;
+}
+
+function movesOfBishop(pieceCoord, board) {
+  let colletionOfMoves = ruleOfBishop(pieceCoord, board);
+  let selectedColour = occupyingColour(pieceCoord[0], pieceCoord[1], board);
+  return filterActualMoves(selectedColour, colletionOfMoves, board);
+}
+
+function movesOfRook(pieceCoord, board) {
+  let colletionOfMoves = ruleOfRook(pieceCoord, board);
+  let selectedColour = occupyingColour(pieceCoord[0], pieceCoord[1], board);
+  return filterActualMoves(selectedColour, colletionOfMoves, board);
+}
+
+function movesOfKnight(pieceCoord, board) {
+  let colletionOfMoves = ruleOfKnight(pieceCoord, board);
+  let selectedColour = occupyingColour(pieceCoord[0], pieceCoord[1], board);
+  return filterActualMoves(selectedColour, colletionOfMoves, board);
+}
+
+function movesOfQueen(pieceCoord, board) {
+  let colletionOfMoves = ruleOfQueen(pieceCoord, board);
+  let selectedColour = occupyingColour(pieceCoord[0], pieceCoord[1], board);
+  return filterActualMoves(selectedColour, colletionOfMoves, board);
+}
+
+function movesOfPawn(pieceCoord, board) {
+  let [rowCoord, colCoord] = pieceCoord;
+  let selectedColour = occupyingColour(rowCoord, colCoord, board);
+  let collectionOfMoves = [];
+  let attackRange = pawnAttackingRange(pieceCoord, board);
+  let pieceColour;
+  attackRange.forEach(cellCoord => {
+    pieceColour = occupyingColour(cellCoord[0], cellCoord[1], board);
+
+    if (pieceColour == oppositeColour(selectedColour)) {
+      collectionOfMoves.push(cellCoord);
+    }
+  });
+
+  if (selectedColour == "W") {
+    if (rowCoord == 1) {
+      if (board[rowCoord + 1][colCoord] == " " && board[rowCoord + 2][colCoord] == " ") {
+        collectionOfMoves.push([rowCoord + 2, colCoord]);
+      }
+    }
+
+    if (rowCoord < 7) {
+      if (board[rowCoord + 1][colCoord] == " ") {
+        collectionOfMoves.push([rowCoord + 1, colCoord]);
+      }
+    }
+  }
+
+  if (selectedColour == "B") {
+    if (rowCoord == 6) {
+      if (board[rowCoord - 1][colCoord] == " " && board[rowCoord - 2][colCoord] == " ") {
+        collectionOfMoves.push([rowCoord - 2, colCoord]);
+      }
+    }
+
+    if (rowCoord > 0) {
+      if (board[rowCoord - 1][colCoord] == " ") {
+        collectionOfMoves.push([rowCoord - 1, colCoord]);
+      }
+    }
+  }
+
+  return collectionOfMoves;
+}
+
+function kingSideCastlingMoves(kingCoord, cellsUnderAttacks, board) {
+  let [rowCoord, colCoord] = kingCoord;
+
+  if (board[rowCoord][colCoord + 1] == " " && board[rowCoord][colCoord + 2] == " ") {
+    if (!Object(_GeneralAlgorithms__WEBPACK_IMPORTED_MODULE_0__["arraysIncludeArray"])(cellsUnderAttacks, [rowCoord, colCoord])) {
+      if (!Object(_GeneralAlgorithms__WEBPACK_IMPORTED_MODULE_0__["arraysIncludeArray"])(cellsUnderAttacks, [rowCoord, colCoord + 1])) {
+        if (!Object(_GeneralAlgorithms__WEBPACK_IMPORTED_MODULE_0__["arraysIncludeArray"])(cellsUnderAttacks, [rowCoord, colCoord + 2])) {
+          return [rowCoord, colCoord + 2];
+        }
+      }
+    }
+  }
+}
+
+function queenSideCastlingMoves(kingCoord, cellsUnderAttacks, board) {
+  let [rowCoord, colCoord] = kingCoord;
+
+  if (board[rowCoord][colCoord - 1] == " " && board[rowCoord][colCoord - 2] == " " && board[rowCoord][colCoord - 3] == " ") {
+    if (!Object(_GeneralAlgorithms__WEBPACK_IMPORTED_MODULE_0__["arraysIncludeArray"])(cellsUnderAttacks, [rowCoord, colCoord])) {
+      if (!Object(_GeneralAlgorithms__WEBPACK_IMPORTED_MODULE_0__["arraysIncludeArray"])(cellsUnderAttacks, [rowCoord, colCoord - 1])) {
+        if (!Object(_GeneralAlgorithms__WEBPACK_IMPORTED_MODULE_0__["arraysIncludeArray"])(cellsUnderAttacks, [rowCoord, colCoord - 2])) {
+          return [rowCoord, colCoord - 2];
+        }
+      }
+    }
+  }
+}
+
+function castlingMoves(kingCoord, kingColour, cellsUnderAttacks, board) {
+  let legalMove = [];
+  let move;
+
+  if (kingColour == "W") {
+    if (castlingIndicators.whiteKingSide) {
+      move = kingSideCastlingMoves(kingCoord, cellsUnderAttacks, board);
+
+      if (move) {
+        legalMove.push(move);
+      }
+    }
+
+    if (castlingIndicators.whiteQueenSide) {
+      move = queenSideCastlingMoves(kingCoord, cellsUnderAttacks, board);
+
+      if (move) {
+        legalMove.push(move);
+      }
+    }
+  }
+
+  if (kingColour == "B") {
+    if (castlingIndicators.blackKingSide) {
+      move = kingSideCastlingMoves(kingCoord, cellsUnderAttacks, board);
+
+      if (move) {
+        legalMove.push(move);
+      }
+    }
+
+    if (castlingIndicators.blackQueenSide) {
+      move = queenSideCastlingMoves(kingCoord, cellsUnderAttacks, board);
+
+      if (move) {
+        legalMove.push(move);
+      }
+    }
+  }
+
+  return legalMove;
+}
+
+function changeCastlingIndicators(piecesArrangement) {
+  if (piecesArrangement[0][4] !== "WK") {
+    castlingIndicators.whiteKingSide = false;
+    castlingIndicators.whiteQueenSide = false;
+  }
+
+  if (piecesArrangement[0][7] !== "WR") {
+    castlingIndicators.whiteKingSide = false;
+  }
+
+  if (piecesArrangement[0][0] !== "WR") {
+    castlingIndicators.whiteQueenSide = false;
+  }
+
+  if (piecesArrangement[7][4] !== "BK") {
+    castlingIndicators.blackKingSide = false;
+    castlingIndicators.blackQueenSide = false;
+  }
+
+  if (piecesArrangement[7][7] !== "BR") {
+    castlingIndicators.blackKingSide = false;
+  }
+
+  if (piecesArrangement[7][0] !== "BR") {
+    castlingIndicators.blackQueenSide = false;
+  }
+}
+
+function movesOfKing(kingCoord, board) {
+  let [rowCoord, colCoord] = kingCoord;
+  let collectionOfMoves = ruleOfKing(kingCoord, board);
+  let legalMove = [];
+  let kingColour = occupyingColour(rowCoord, colCoord, board);
+  let enemyColour = oppositeColour(kingColour);
+  let forbiddenMoves = allAttackingRanges(enemyColour, board);
+  collectionOfMoves.forEach(move => {
+    let occupiedPieceColour = occupyingColour(move[0], move[1], board);
+
+    if (occupiedPieceColour !== kingColour) {
+      if (!Object(_GeneralAlgorithms__WEBPACK_IMPORTED_MODULE_0__["arraysIncludeArray"])(forbiddenMoves, move)) {
+        legalMove.push(move);
+      }
+    }
+  });
+  let castlingKingMoves = castlingMoves(kingCoord, kingColour, forbiddenMoves, board);
+
+  if (castlingKingMoves.length !== 0) {
+    castlingKingMoves.forEach(move => {
+      legalMove.push(move);
+    });
+  }
+
+  return legalMove;
+}
+
+function selectedPieceMoves(pieceCoord, board) {
+  let selectedPieceType = occupyingPiece(pieceCoord[0], pieceCoord[1], board);
+  let legalMoves = [];
+
+  if (selectedPieceType == "N") {
+    legalMoves = movesOfKnight(pieceCoord, board);
+  }
+
+  if (selectedPieceType == "R") {
+    legalMoves = movesOfRook(pieceCoord, board);
+  }
+
+  if (selectedPieceType == "B") {
+    legalMoves = movesOfBishop(pieceCoord, board);
+  }
+
+  if (selectedPieceType == "Q") {
+    legalMoves = movesOfQueen(pieceCoord, board);
+  }
+
+  if (selectedPieceType == "P") {
+    legalMoves = movesOfPawn(pieceCoord, board);
+  }
+
+  if (selectedPieceType == "K") {
+    legalMoves = movesOfKing(pieceCoord, board);
+  }
+
+  return legalMoves;
+}
+
+function allPossibleMoves(selectedColour, board) {
+  let allMoves = [];
+  let rowCoord;
+  let colCoord;
+
+  for (rowCoord = 0; rowCoord < 8; rowCoord++) {
+    for (colCoord = 0; colCoord < 8; colCoord++) {
+      if (occupyingColour(rowCoord, colCoord, board) == selectedColour) {
+        let moves = selectedPieceMoves([rowCoord, colCoord], board);
+
+        if (moves.length !== 0) {
+          moves.forEach(cellCoord => {
+            allMoves.push(cellCoord);
+          });
+        }
+      }
+    }
+  }
+
+  return allMoves;
+}
+
+function makeCastlingRookMove(pieceMoved, moveFrom, moveTo, board) {
+  if (pieceMoved === "WK") {
+    let wKingInitPosi = [0, 4];
+    let kingSideCastling = [0, 6];
+    let queenSideCastling = [0, 2];
+
+    if (Object(_GeneralAlgorithms__WEBPACK_IMPORTED_MODULE_0__["checkEqualArray"])(moveFrom, wKingInitPosi)) {
+      if (Object(_GeneralAlgorithms__WEBPACK_IMPORTED_MODULE_0__["checkEqualArray"])(moveTo, kingSideCastling)) {
+        board[0][5] = "WR";
+        board[0][7] = " ";
+      }
+
+      if (Object(_GeneralAlgorithms__WEBPACK_IMPORTED_MODULE_0__["checkEqualArray"])(moveTo, queenSideCastling)) {
+        board[0][3] = "WR";
+        board[0][0] = " ";
+      }
+    }
+  }
+
+  if (pieceMoved === "BK") {
+    let bKingInitPosi = [7, 4];
+    let kingSideCastling = [7, 6];
+    let queenSideCastling = [7, 2];
+
+    if (Object(_GeneralAlgorithms__WEBPACK_IMPORTED_MODULE_0__["checkEqualArray"])(moveFrom, bKingInitPosi)) {
+      if (Object(_GeneralAlgorithms__WEBPACK_IMPORTED_MODULE_0__["checkEqualArray"])(moveTo, kingSideCastling)) {
+        board[7][5] = "BR";
+        board[7][7] = " ";
+      }
+
+      if (Object(_GeneralAlgorithms__WEBPACK_IMPORTED_MODULE_0__["checkEqualArray"])(moveTo, queenSideCastling)) {
+        board[7][3] = "BR";
+        board[7][0] = " ";
+      }
+    }
+  }
+}
+
+function pawnBecomeQueen(pieceMoved, moveTo, board) {
+  if (pieceMoved === "WP") {
+    let [pawnRowCoord, pawnColCoord] = moveTo;
+
+    if (pawnRowCoord == 7) {
+      board[pawnRowCoord][pawnColCoord] = "WQ";
+    }
+  } else if (pieceMoved === "BP") {
+    let [pawnRowCoord, pawnColCoord] = moveTo;
+
+    if (pawnRowCoord == 0) {
+      board[pawnRowCoord][pawnColCoord] = "BQ";
+    }
+  }
+}
+
+function makingMove(moveFrom, moveTo, pieceMoved, board) {
+  board[moveFrom[0]][moveFrom[1]] = " ";
+  board[moveTo[0]][moveTo[1]] = pieceMoved;
+  makeCastlingRookMove(pieceMoved, moveFrom, moveTo, board);
+  pawnBecomeQueen(pieceMoved, moveTo, board);
+}
+
+function isChecked(friendlyColour, board) {
+  let enemyColour = oppositeColour(friendlyColour);
+  let dangerZone = allPossibleMoves(enemyColour, board);
+  let checked = false;
+  dangerZone.forEach(cellUnderAttack => {
+    if (board[cellUnderAttack[0]][cellUnderAttack[1]] == friendlyColour + "K") {
+      checked = true;
+    }
+  });
+
+  if (checked) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+function isCheckmated(enemyColour, board) {
+  let checkmated = true;
+  let rowCoord;
+  let colCoord;
+
+  for (rowCoord = 0; rowCoord < 8; rowCoord++) {
+    for (colCoord = 0; colCoord < 8; colCoord++) {
+      if (occupyingColour(rowCoord, colCoord, board) == enemyColour) {
+        let responsesToCheck = selectedPieceMoves([rowCoord, colCoord], board);
+
+        if (responsesToCheck.length !== 0) {
+          responsesToCheck.forEach(moveTo => {
+            let testingBoard = board.map(row => {
+              return row.slice();
+            });
+            let moveFrom = [rowCoord, colCoord];
+            let pieceMoved = testingBoard[rowCoord][colCoord];
+            makingMove(moveFrom, moveTo, pieceMoved, testingBoard);
+
+            if (!isChecked(enemyColour, testingBoard)) {
+              checkmated = false;
+            }
+          });
+        }
+      }
+
+      if (!checkmated) {
+        break;
+      }
+
+      if (!checkmated) {
+        break;
+      }
+    }
+  }
+
+  return checkmated;
+}
+
+function makeLegalMove(possibleMoves, moveFrom, moveTo, pieceMoved, board) {
+  let isMoveMade = false;
+  let friendlyColour = pieceMoved[0];
+  let enemyColour = oppositeColour(friendlyColour);
+
+  if (Object(_GeneralAlgorithms__WEBPACK_IMPORTED_MODULE_0__["arraysIncludeArray"])(possibleMoves, moveTo)) {
+    makingMove(moveFrom, moveTo, pieceMoved, board);
+    isMoveMade = true;
+
+    if (isChecked(friendlyColour, board)) {
+      makingMove(moveTo, moveFrom, pieceMoved, board);
+      isMoveMade = false;
+      alert("Illegal move, King under check");
+    } else if (isCheckmated(enemyColour, board)) {
+      if (friendlyColour == "W") {
+        whoWins = "White Wins";
+      } else {
+        whoWins = "Black Wins";
+      }
+    }
+  }
+
+  if (isMoveMade) {
+    changeCastlingIndicators(board);
+  }
+
+  return isMoveMade;
+}
+
+function oppositeColour(playerColour) {
+  if (playerColour === "W") {
+    return "B";
+  } else if (playerColour === "B") {
+    return "W";
+  } else {
+    return null;
+  }
+}
+
+function occupyingColour(rowCoord, colCoord, board) {
+  const inThatCell = board[rowCoord][colCoord];
+  const pieceColour = inThatCell[0];
+  return pieceColour;
+}
+
+function occupyingPiece(rowCoord, colCoord, board) {
+  const inThatCell = board[rowCoord][colCoord];
+  const pieceType = inThatCell[1];
+  return pieceType;
+}
+
+
+
+
+
+
+const currentExports = __react_refresh_utils__.getModuleExports(module.i);
+__react_refresh_utils__.registerExportsForReactRefresh(currentExports, module.i);
+
+if (true) {
+  const isHotUpdate = !!module.hot.data;
+  const prevExports = isHotUpdate ? module.hot.data.prevExports : null;
+
+  if (__react_refresh_utils__.isReactRefreshBoundary(currentExports)) {
+    module.hot.dispose(
+      /**
+       * A callback to performs a full refresh if React has unrecoverable errors,
+       * and also caches the to-be-disposed module.
+       * @param {*} data A hot module data object from Webpack HMR.
+       * @returns {void}
+       */
+      function hotDisposeCallback(data) {
+        // We have to mutate the data object to get data registered and cached
+        data.prevExports = currentExports;
+      }
+    );
+    module.hot.accept(
+      /**
+       * An error handler to allow self-recovering behaviours.
+       * @param {Error} error An error occurred during evaluation of a module.
+       * @returns {void}
+       */
+      function hotErrorHandler(error) {
+        if (
+          typeof __react_refresh_error_overlay__ !== 'undefined' &&
+          __react_refresh_error_overlay__
+        ) {
+          __react_refresh_error_overlay__.handleRuntimeError(error);
+        }
+
+        if (typeof __react_refresh_test__ !== 'undefined' && __react_refresh_test__) {
+          if (window.onHotAcceptError) {
+            window.onHotAcceptError(error.message);
+          }
+        }
+
+        __webpack_require__.c[module.i].hot.accept(hotErrorHandler);
+      }
+    );
+
+    if (isHotUpdate) {
+      if (
+        __react_refresh_utils__.isReactRefreshBoundary(prevExports) &&
+        __react_refresh_utils__.shouldInvalidateReactRefreshBoundary(prevExports, currentExports)
+      ) {
+        module.hot.invalidate();
+      } else {
+        __react_refresh_utils__.enqueueUpdate(
+          /**
+           * A function to dismiss the error overlay after performing React refresh.
+           * @returns {void}
+           */
+          function updateCallback() {
+            if (
+              typeof __react_refresh_error_overlay__ !== 'undefined' &&
+              __react_refresh_error_overlay__
+            ) {
+              __react_refresh_error_overlay__.clearRuntimeErrors();
+            }
+          }
+        );
+      }
+    }
+  } else {
+    if (isHotUpdate && __react_refresh_utils__.isReactRefreshBoundary(prevExports)) {
+      module.hot.invalidate();
+    }
+  }
+}
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@pmmmwh/react-refresh-webpack-plugin/lib/runtime/RefreshUtils.js */ "./node_modules/@pmmmwh/react-refresh-webpack-plugin/lib/runtime/RefreshUtils.js"), __webpack_require__(/*! ./node_modules/react-dev-utils/refreshOverlayInterop.js */ "./node_modules/react-dev-utils/refreshOverlayInterop.js")))
+
+/***/ }),
+
+/***/ "./src/components/Board.jsx":
+/*!**********************************!*\
+  !*** ./src/components/Board.jsx ***!
+  \**********************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* WEBPACK VAR INJECTION */(function(__react_refresh_utils__, __react_refresh_error_overlay__) {/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _Square__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./Square */ "./src/components/Square.jsx");
+/* harmony import */ var _GeneralAlgorithms__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./GeneralAlgorithms */ "./src/components/GeneralAlgorithms.jsx");
+/* harmony import */ var react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! react/jsx-dev-runtime */ "./node_modules/react/jsx-dev-runtime.js");
+/* harmony import */ var react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_3__);
+__webpack_require__.$Refresh$.runtime = __webpack_require__(/*! ./node_modules/react-refresh/runtime.js */ "./node_modules/react-refresh/runtime.js");
+__webpack_require__.$Refresh$.setup(module.i);
+
+var _jsxFileName = "C:\\Users\\Home\\Desktop\\software engineering\\personal project\\Chess\\src\\components\\Board.jsx";
+//jshint esversion:6
+
+
+
+
+
+
+
+function Board(props) {
+  const cellsColourIndex = [[0, 1, 0, 1, 0, 1, 0, 1], [1, 0, 1, 0, 1, 0, 1, 0], [0, 1, 0, 1, 0, 1, 0, 1], [1, 0, 1, 0, 1, 0, 1, 0], [0, 1, 0, 1, 0, 1, 0, 1], [1, 0, 1, 0, 1, 0, 1, 0], [0, 1, 0, 1, 0, 1, 0, 1], [1, 0, 1, 0, 1, 0, 1, 0]];
+  let boardForDisplay = props.isWhiteTurn ? cellsColourIndex : Object(_GeneralAlgorithms__WEBPACK_IMPORTED_MODULE_2__["flippingArrays"])(cellsColourIndex);
+
+  function renderRows(row, rowNum) {
+    let cellColour;
+    let chessPiece;
+    return /*#__PURE__*/Object(react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_3__["jsxDEV"])("div", {
+      children: row.map((colourIndex, colNum) => {
+        if (colourIndex === 0) {
+          cellColour = "white";
+        } else {
+          cellColour = "green";
+        }
+
+        chessPiece = props.piecesArrangement[rowNum][colNum];
+
+        if (Object(_GeneralAlgorithms__WEBPACK_IMPORTED_MODULE_2__["arraysIncludeArray"])([props.moveMade.moveFrom, props.moveMade.moveTo], [rowNum, colNum])) {
+          cellColour = "red";
+        }
+
+        if (Object(_GeneralAlgorithms__WEBPACK_IMPORTED_MODULE_2__["arraysIncludeArray"])(props.validMoves, [rowNum, colNum])) {
+          cellColour = "lightGreen";
+        }
+
+        if (Object(_GeneralAlgorithms__WEBPACK_IMPORTED_MODULE_2__["checkEqualArray"])(props.clickedCell, [rowNum, colNum])) {
+          cellColour = "yellow";
+        }
+
+        return /*#__PURE__*/Object(react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_3__["jsxDEV"])(_Square__WEBPACK_IMPORTED_MODULE_1__["default"], {
+          colour: cellColour,
+          piece: chessPiece,
+          onClick: () => props.onClick([rowNum, colNum])
+        }, void 0, false, {
+          fileName: _jsxFileName,
+          lineNumber: 42,
+          columnNumber: 9
+        }, this);
+      })
+    }, void 0, false, {
+      fileName: _jsxFileName,
+      lineNumber: 25,
+      columnNumber: 7
+    }, this);
+  }
+
+  return /*#__PURE__*/Object(react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_3__["jsxDEV"])("div", {
+    children: boardForDisplay.map((row, rowIndex) => {
+      let rowNum = props.isWhiteTurn ? boardForDisplay.length - 1 - rowIndex : rowIndex;
+      return renderRows(row, rowNum);
+    })
+  }, void 0, false, {
+    fileName: _jsxFileName,
+    lineNumber: 54,
+    columnNumber: 7
+  }, this);
+}
+
+_c = Board;
+/* harmony default export */ __webpack_exports__["default"] = (Board);
+
+var _c;
+
+__webpack_require__.$Refresh$.register(_c, "Board");
+
+const currentExports = __react_refresh_utils__.getModuleExports(module.i);
+__react_refresh_utils__.registerExportsForReactRefresh(currentExports, module.i);
+
+if (true) {
+  const isHotUpdate = !!module.hot.data;
+  const prevExports = isHotUpdate ? module.hot.data.prevExports : null;
+
+  if (__react_refresh_utils__.isReactRefreshBoundary(currentExports)) {
+    module.hot.dispose(
+      /**
+       * A callback to performs a full refresh if React has unrecoverable errors,
+       * and also caches the to-be-disposed module.
+       * @param {*} data A hot module data object from Webpack HMR.
+       * @returns {void}
+       */
+      function hotDisposeCallback(data) {
+        // We have to mutate the data object to get data registered and cached
+        data.prevExports = currentExports;
+      }
+    );
+    module.hot.accept(
+      /**
+       * An error handler to allow self-recovering behaviours.
+       * @param {Error} error An error occurred during evaluation of a module.
+       * @returns {void}
+       */
+      function hotErrorHandler(error) {
+        if (
+          typeof __react_refresh_error_overlay__ !== 'undefined' &&
+          __react_refresh_error_overlay__
+        ) {
+          __react_refresh_error_overlay__.handleRuntimeError(error);
+        }
+
+        if (typeof __react_refresh_test__ !== 'undefined' && __react_refresh_test__) {
+          if (window.onHotAcceptError) {
+            window.onHotAcceptError(error.message);
+          }
+        }
+
+        __webpack_require__.c[module.i].hot.accept(hotErrorHandler);
+      }
+    );
+
+    if (isHotUpdate) {
+      if (
+        __react_refresh_utils__.isReactRefreshBoundary(prevExports) &&
+        __react_refresh_utils__.shouldInvalidateReactRefreshBoundary(prevExports, currentExports)
+      ) {
+        module.hot.invalidate();
+      } else {
+        __react_refresh_utils__.enqueueUpdate(
+          /**
+           * A function to dismiss the error overlay after performing React refresh.
+           * @returns {void}
+           */
+          function updateCallback() {
+            if (
+              typeof __react_refresh_error_overlay__ !== 'undefined' &&
+              __react_refresh_error_overlay__
+            ) {
+              __react_refresh_error_overlay__.clearRuntimeErrors();
+            }
+          }
+        );
+      }
+    }
+  } else {
+    if (isHotUpdate && __react_refresh_utils__.isReactRefreshBoundary(prevExports)) {
+      module.hot.invalidate();
+    }
+  }
+}
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@pmmmwh/react-refresh-webpack-plugin/lib/runtime/RefreshUtils.js */ "./node_modules/@pmmmwh/react-refresh-webpack-plugin/lib/runtime/RefreshUtils.js"), __webpack_require__(/*! ./node_modules/react-dev-utils/refreshOverlayInterop.js */ "./node_modules/react-dev-utils/refreshOverlayInterop.js")))
+
+/***/ }),
+
+/***/ "./src/components/BoardBlackSide.jsx":
+/*!*******************************************!*\
+  !*** ./src/components/BoardBlackSide.jsx ***!
+  \*******************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* WEBPACK VAR INJECTION */(function(__react_refresh_utils__, __react_refresh_error_overlay__) {/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _Square__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./Square */ "./src/components/Square.jsx");
+/* harmony import */ var _GeneralAlgorithms__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./GeneralAlgorithms */ "./src/components/GeneralAlgorithms.jsx");
+/* harmony import */ var react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! react/jsx-dev-runtime */ "./node_modules/react/jsx-dev-runtime.js");
+/* harmony import */ var react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_3__);
+__webpack_require__.$Refresh$.runtime = __webpack_require__(/*! ./node_modules/react-refresh/runtime.js */ "./node_modules/react-refresh/runtime.js");
+__webpack_require__.$Refresh$.setup(module.i);
+
+var _jsxFileName = "C:\\Users\\Home\\Desktop\\software engineering\\personal project\\Chess\\src\\components\\BoardBlackSide.jsx";
+//jshint esversion:6
+
+
+
+
+
+
+
+function BoardBlackSide(props) {
+  const cellsColourIndex = [[0, 1, 0, 1, 0, 1, 0, 1], [1, 0, 1, 0, 1, 0, 1, 0], [0, 1, 0, 1, 0, 1, 0, 1], [1, 0, 1, 0, 1, 0, 1, 0], [0, 1, 0, 1, 0, 1, 0, 1], [1, 0, 1, 0, 1, 0, 1, 0], [0, 1, 0, 1, 0, 1, 0, 1], [1, 0, 1, 0, 1, 0, 1, 0]];
+  let boardForDisplay = Object(_GeneralAlgorithms__WEBPACK_IMPORTED_MODULE_2__["flippingArrays"])(cellsColourIndex);
+
+  function renderRows(row, rowNum) {
+    let cellColour;
+    let chessPiece;
+    return /*#__PURE__*/Object(react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_3__["jsxDEV"])("div", {
+      children: row.map((colourIndex, colNum) => {
+        if (colourIndex === 0) {
+          cellColour = "white";
+        } else {
+          cellColour = "green";
+        }
+
+        chessPiece = props.piecesArrangement[rowNum][colNum];
+
+        if (Object(_GeneralAlgorithms__WEBPACK_IMPORTED_MODULE_2__["arraysIncludeArray"])([props.moveMade.moveFrom, props.moveMade.moveTo], [rowNum, colNum])) {
+          cellColour = "red";
+        }
+
+        if (Object(_GeneralAlgorithms__WEBPACK_IMPORTED_MODULE_2__["arraysIncludeArray"])(props.validMoves, [rowNum, colNum])) {
+          cellColour = "lightGreen";
+        }
+
+        if (Object(_GeneralAlgorithms__WEBPACK_IMPORTED_MODULE_2__["checkEqualArray"])(props.clickedCell, [rowNum, colNum])) {
+          cellColour = "yellow";
+        }
+
+        return /*#__PURE__*/Object(react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_3__["jsxDEV"])(_Square__WEBPACK_IMPORTED_MODULE_1__["default"], {
+          colour: cellColour,
+          piece: chessPiece,
+          onClick: () => props.onClick([rowNum, colNum])
+        }, void 0, false, {
+          fileName: _jsxFileName,
+          lineNumber: 42,
+          columnNumber: 9
+        }, this);
+      })
+    }, void 0, false, {
+      fileName: _jsxFileName,
+      lineNumber: 25,
+      columnNumber: 7
+    }, this);
+  }
+
+  return /*#__PURE__*/Object(react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_3__["jsxDEV"])("div", {
+    children: boardForDisplay.map((row, rowIndex) => {
+      let rowNum = rowIndex;
+      return renderRows(row, rowNum);
+    })
+  }, void 0, false, {
+    fileName: _jsxFileName,
+    lineNumber: 54,
+    columnNumber: 7
+  }, this);
+}
+
+_c = BoardBlackSide;
+/* harmony default export */ __webpack_exports__["default"] = (BoardBlackSide);
+
+var _c;
+
+__webpack_require__.$Refresh$.register(_c, "BoardBlackSide");
+
+const currentExports = __react_refresh_utils__.getModuleExports(module.i);
+__react_refresh_utils__.registerExportsForReactRefresh(currentExports, module.i);
+
+if (true) {
+  const isHotUpdate = !!module.hot.data;
+  const prevExports = isHotUpdate ? module.hot.data.prevExports : null;
+
+  if (__react_refresh_utils__.isReactRefreshBoundary(currentExports)) {
+    module.hot.dispose(
+      /**
+       * A callback to performs a full refresh if React has unrecoverable errors,
+       * and also caches the to-be-disposed module.
+       * @param {*} data A hot module data object from Webpack HMR.
+       * @returns {void}
+       */
+      function hotDisposeCallback(data) {
+        // We have to mutate the data object to get data registered and cached
+        data.prevExports = currentExports;
+      }
+    );
+    module.hot.accept(
+      /**
+       * An error handler to allow self-recovering behaviours.
+       * @param {Error} error An error occurred during evaluation of a module.
+       * @returns {void}
+       */
+      function hotErrorHandler(error) {
+        if (
+          typeof __react_refresh_error_overlay__ !== 'undefined' &&
+          __react_refresh_error_overlay__
+        ) {
+          __react_refresh_error_overlay__.handleRuntimeError(error);
+        }
+
+        if (typeof __react_refresh_test__ !== 'undefined' && __react_refresh_test__) {
+          if (window.onHotAcceptError) {
+            window.onHotAcceptError(error.message);
+          }
+        }
+
+        __webpack_require__.c[module.i].hot.accept(hotErrorHandler);
+      }
+    );
+
+    if (isHotUpdate) {
+      if (
+        __react_refresh_utils__.isReactRefreshBoundary(prevExports) &&
+        __react_refresh_utils__.shouldInvalidateReactRefreshBoundary(prevExports, currentExports)
+      ) {
+        module.hot.invalidate();
+      } else {
+        __react_refresh_utils__.enqueueUpdate(
+          /**
+           * A function to dismiss the error overlay after performing React refresh.
+           * @returns {void}
+           */
+          function updateCallback() {
+            if (
+              typeof __react_refresh_error_overlay__ !== 'undefined' &&
+              __react_refresh_error_overlay__
+            ) {
+              __react_refresh_error_overlay__.clearRuntimeErrors();
+            }
+          }
+        );
+      }
+    }
+  } else {
+    if (isHotUpdate && __react_refresh_utils__.isReactRefreshBoundary(prevExports)) {
+      module.hot.invalidate();
+    }
+  }
+}
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@pmmmwh/react-refresh-webpack-plugin/lib/runtime/RefreshUtils.js */ "./node_modules/@pmmmwh/react-refresh-webpack-plugin/lib/runtime/RefreshUtils.js"), __webpack_require__(/*! ./node_modules/react-dev-utils/refreshOverlayInterop.js */ "./node_modules/react-dev-utils/refreshOverlayInterop.js")))
+
+/***/ }),
+
+/***/ "./src/components/BoardWhiteSide.jsx":
+/*!*******************************************!*\
+  !*** ./src/components/BoardWhiteSide.jsx ***!
+  \*******************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* WEBPACK VAR INJECTION */(function(__react_refresh_utils__, __react_refresh_error_overlay__) {/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _Square__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./Square */ "./src/components/Square.jsx");
+/* harmony import */ var _GeneralAlgorithms__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./GeneralAlgorithms */ "./src/components/GeneralAlgorithms.jsx");
+/* harmony import */ var react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! react/jsx-dev-runtime */ "./node_modules/react/jsx-dev-runtime.js");
+/* harmony import */ var react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_3__);
+__webpack_require__.$Refresh$.runtime = __webpack_require__(/*! ./node_modules/react-refresh/runtime.js */ "./node_modules/react-refresh/runtime.js");
+__webpack_require__.$Refresh$.setup(module.i);
+
+var _jsxFileName = "C:\\Users\\Home\\Desktop\\software engineering\\personal project\\Chess\\src\\components\\BoardWhiteSide.jsx";
+//jshint esversion:6
+
+
+
+
+
+
+
+function BoardWhiteSide(props) {
+  const cellsColourIndex = [[0, 1, 0, 1, 0, 1, 0, 1], [1, 0, 1, 0, 1, 0, 1, 0], [0, 1, 0, 1, 0, 1, 0, 1], [1, 0, 1, 0, 1, 0, 1, 0], [0, 1, 0, 1, 0, 1, 0, 1], [1, 0, 1, 0, 1, 0, 1, 0], [0, 1, 0, 1, 0, 1, 0, 1], [1, 0, 1, 0, 1, 0, 1, 0]];
+  let boardForDisplay = cellsColourIndex;
+
+  function renderRows(row, rowNum) {
+    let cellColour;
+    let chessPiece;
+    return /*#__PURE__*/Object(react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_3__["jsxDEV"])("div", {
+      children: row.map((colourIndex, colNum) => {
+        if (colourIndex === 0) {
+          cellColour = "white";
+        } else {
+          cellColour = "green";
+        }
+
+        chessPiece = props.piecesArrangement[rowNum][colNum];
+
+        if (Object(_GeneralAlgorithms__WEBPACK_IMPORTED_MODULE_2__["arraysIncludeArray"])([props.moveMade.moveFrom, props.moveMade.moveTo], [rowNum, colNum])) {
+          cellColour = "red";
+        }
+
+        if (Object(_GeneralAlgorithms__WEBPACK_IMPORTED_MODULE_2__["arraysIncludeArray"])(props.validMoves, [rowNum, colNum])) {
+          cellColour = "lightGreen";
+        }
+
+        if (Object(_GeneralAlgorithms__WEBPACK_IMPORTED_MODULE_2__["checkEqualArray"])(props.clickedCell, [rowNum, colNum])) {
+          cellColour = "yellow";
+        }
+
+        return /*#__PURE__*/Object(react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_3__["jsxDEV"])(_Square__WEBPACK_IMPORTED_MODULE_1__["default"], {
+          colour: cellColour,
+          piece: chessPiece,
+          onClick: () => props.onClick([rowNum, colNum])
+        }, void 0, false, {
+          fileName: _jsxFileName,
+          lineNumber: 42,
+          columnNumber: 9
+        }, this);
+      })
+    }, void 0, false, {
+      fileName: _jsxFileName,
+      lineNumber: 25,
+      columnNumber: 7
+    }, this);
+  }
+
+  return /*#__PURE__*/Object(react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_3__["jsxDEV"])("div", {
+    children: boardForDisplay.map((row, rowIndex) => {
+      let rowNum = boardForDisplay.length - 1 - rowIndex;
+      return renderRows(row, rowNum);
+    })
+  }, void 0, false, {
+    fileName: _jsxFileName,
+    lineNumber: 54,
+    columnNumber: 7
+  }, this);
+}
+
+_c = BoardWhiteSide;
+/* harmony default export */ __webpack_exports__["default"] = (BoardWhiteSide);
+
+var _c;
+
+__webpack_require__.$Refresh$.register(_c, "BoardWhiteSide");
+
+const currentExports = __react_refresh_utils__.getModuleExports(module.i);
+__react_refresh_utils__.registerExportsForReactRefresh(currentExports, module.i);
+
+if (true) {
+  const isHotUpdate = !!module.hot.data;
+  const prevExports = isHotUpdate ? module.hot.data.prevExports : null;
+
+  if (__react_refresh_utils__.isReactRefreshBoundary(currentExports)) {
+    module.hot.dispose(
+      /**
+       * A callback to performs a full refresh if React has unrecoverable errors,
+       * and also caches the to-be-disposed module.
+       * @param {*} data A hot module data object from Webpack HMR.
+       * @returns {void}
+       */
+      function hotDisposeCallback(data) {
+        // We have to mutate the data object to get data registered and cached
+        data.prevExports = currentExports;
+      }
+    );
+    module.hot.accept(
+      /**
+       * An error handler to allow self-recovering behaviours.
+       * @param {Error} error An error occurred during evaluation of a module.
+       * @returns {void}
+       */
+      function hotErrorHandler(error) {
+        if (
+          typeof __react_refresh_error_overlay__ !== 'undefined' &&
+          __react_refresh_error_overlay__
+        ) {
+          __react_refresh_error_overlay__.handleRuntimeError(error);
+        }
+
+        if (typeof __react_refresh_test__ !== 'undefined' && __react_refresh_test__) {
+          if (window.onHotAcceptError) {
+            window.onHotAcceptError(error.message);
+          }
+        }
+
+        __webpack_require__.c[module.i].hot.accept(hotErrorHandler);
+      }
+    );
+
+    if (isHotUpdate) {
+      if (
+        __react_refresh_utils__.isReactRefreshBoundary(prevExports) &&
+        __react_refresh_utils__.shouldInvalidateReactRefreshBoundary(prevExports, currentExports)
+      ) {
+        module.hot.invalidate();
+      } else {
+        __react_refresh_utils__.enqueueUpdate(
+          /**
+           * A function to dismiss the error overlay after performing React refresh.
+           * @returns {void}
+           */
+          function updateCallback() {
+            if (
+              typeof __react_refresh_error_overlay__ !== 'undefined' &&
+              __react_refresh_error_overlay__
+            ) {
+              __react_refresh_error_overlay__.clearRuntimeErrors();
+            }
+          }
+        );
+      }
+    }
+  } else {
+    if (isHotUpdate && __react_refresh_utils__.isReactRefreshBoundary(prevExports)) {
+      module.hot.invalidate();
+    }
+  }
+}
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@pmmmwh/react-refresh-webpack-plugin/lib/runtime/RefreshUtils.js */ "./node_modules/@pmmmwh/react-refresh-webpack-plugin/lib/runtime/RefreshUtils.js"), __webpack_require__(/*! ./node_modules/react-dev-utils/refreshOverlayInterop.js */ "./node_modules/react-dev-utils/refreshOverlayInterop.js")))
+
+/***/ }),
+
+/***/ "./src/components/Game.jsx":
+/*!*********************************!*\
+  !*** ./src/components/Game.jsx ***!
+  \*********************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* WEBPACK VAR INJECTION */(function(__react_refresh_utils__, __react_refresh_error_overlay__) {/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _Board__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./Board */ "./src/components/Board.jsx");
+/* harmony import */ var _BoardWhiteSide__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./BoardWhiteSide */ "./src/components/BoardWhiteSide.jsx");
+/* harmony import */ var _BoardBlackSide__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./BoardBlackSide */ "./src/components/BoardBlackSide.jsx");
+/* harmony import */ var _Algorithms__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./Algorithms */ "./src/components/Algorithms.jsx");
+/* harmony import */ var _GeneralAlgorithms__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./GeneralAlgorithms */ "./src/components/GeneralAlgorithms.jsx");
+/* harmony import */ var react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! react/jsx-dev-runtime */ "./node_modules/react/jsx-dev-runtime.js");
+/* harmony import */ var react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_6___default = /*#__PURE__*/__webpack_require__.n(react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_6__);
+__webpack_require__.$Refresh$.runtime = __webpack_require__(/*! ./node_modules/react-refresh/runtime.js */ "./node_modules/react-refresh/runtime.js");
+__webpack_require__.$Refresh$.setup(module.i);
+
+var _jsxFileName = "C:\\Users\\Home\\Desktop\\software engineering\\personal project\\Chess\\src\\components\\Game.jsx",
+    _s = __webpack_require__.$Refresh$.signature();
+
+//jshint esversion:6
+
+
+
+
+
+
+
+
+
+
+let piecesArrangement = [["WR", "WN", "WB", "WQ", "WK", "WB", "WN", "WR"], ["WP", "WP", "WP", "WP", "WP", "WP", "WP", "WP"], [" ", " ", " ", " ", " ", " ", " ", " "], [" ", " ", " ", " ", " ", " ", " ", " "], [" ", " ", " ", " ", " ", " ", " ", " "], [" ", " ", " ", " ", " ", " ", " ", " "], ["BP", "BP", "BP", "BP", "BP", "BP", "BP", "BP"], ["BR", "BN", "BB", "BQ", "BK", "BB", "BN", "BR"]];
+
+function Game() {
+  _s();
+
+  const [gameState, setSate] = Object(react__WEBPACK_IMPORTED_MODULE_0__["useState"])({
+    isWhiteTurn: true
+  });
+  const [pieceSelected, setPiece] = Object(react__WEBPACK_IMPORTED_MODULE_0__["useState"])({
+    coord: {
+      row: null,
+      col: null
+    },
+    piece: null,
+    isSelected: false,
+    possibleMoves: []
+  });
+  const [pieceMoved, setMoves] = Object(react__WEBPACK_IMPORTED_MODULE_0__["useState"])({
+    moveFrom: [],
+    moveTo: []
+  });
+
+  function handleClick(clickedCellCoord) {
+    let [rowCoord, colCoord] = clickedCellCoord;
+    let selectedPiece = piecesArrangement[rowCoord][colCoord];
+    let pieceColour = selectedPiece[0];
+    let legalMoves = Object(_Algorithms__WEBPACK_IMPORTED_MODULE_4__["selectedPieceMoves"])(clickedCellCoord, piecesArrangement);
+    let turn = gameState.isWhiteTurn ? "W" : "B";
+
+    if (_Algorithms__WEBPACK_IMPORTED_MODULE_4__["whoWins"] !== null) {
+      alert("Game over, " + _Algorithms__WEBPACK_IMPORTED_MODULE_4__["whoWins"] + " refresh the page to start a new game");
+    }
+
+    if (pieceColour == turn && pieceSelected.isSelected === false) {
+      setPiece({
+        coord: {
+          row: rowCoord,
+          col: colCoord
+        },
+        piece: selectedPiece,
+        isSelected: true,
+        possibleMoves: legalMoves
+      });
+    }
+
+    if (pieceSelected.isSelected === true) {
+      let moveFrom = [pieceSelected.coord.row, pieceSelected.coord.col];
+      let moveTo = clickedCellCoord;
+      let pieceMoved = pieceSelected.piece;
+      let isMoved = Object(_Algorithms__WEBPACK_IMPORTED_MODULE_4__["makeLegalMove"])(pieceSelected.possibleMoves, moveFrom, moveTo, pieceMoved, piecesArrangement);
+
+      if (isMoved) {
+        setSate({
+          isWhiteTurn: gameState.isWhiteTurn ? false : true
+        });
+        setMoves({
+          moveFrom: moveFrom,
+          moveTo: moveTo
+        });
+      }
+
+      setPiece({
+        coord: {
+          row: null,
+          col: null
+        },
+        piece: null,
+        isSelected: false,
+        possibleMoves: []
+      });
+    }
+  }
+
+  return /*#__PURE__*/Object(react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_6__["jsxDEV"])("div", {
+    children: [/*#__PURE__*/Object(react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_6__["jsxDEV"])("div", {
+      className: "game row",
+      children: [/*#__PURE__*/Object(react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_6__["jsxDEV"])("h3", {
+        children: " Chess Game "
+      }, void 0, false, {
+        fileName: _jsxFileName,
+        lineNumber: 90,
+        columnNumber: 7
+      }, this), /*#__PURE__*/Object(react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_6__["jsxDEV"])(_Board__WEBPACK_IMPORTED_MODULE_1__["default"], {
+        piecesArrangement: piecesArrangement,
+        onClick: ([rowNum, colNum]) => handleClick([rowNum, colNum]),
+        validMoves: pieceSelected.possibleMoves,
+        clickedCell: [pieceSelected.coord.row, pieceSelected.coord.col],
+        isWhiteTurn: gameState.isWhiteTurn,
+        moveMade: pieceMoved
+      }, void 0, false, {
+        fileName: _jsxFileName,
+        lineNumber: 91,
+        columnNumber: 11
+      }, this)]
+    }, void 0, true, {
+      fileName: _jsxFileName,
+      lineNumber: 89,
+      columnNumber: 7
+    }, this), /*#__PURE__*/Object(react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_6__["jsxDEV"])("div", {
+      className: "game row",
+      children: [/*#__PURE__*/Object(react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_6__["jsxDEV"])("h3", {
+        children: " Display for white side "
+      }, void 0, false, {
+        fileName: _jsxFileName,
+        lineNumber: 101,
+        columnNumber: 15
+      }, this), /*#__PURE__*/Object(react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_6__["jsxDEV"])(_BoardWhiteSide__WEBPACK_IMPORTED_MODULE_2__["default"], {
+        piecesArrangement: piecesArrangement,
+        onClick: ([rowNum, colNum]) => handleClick([rowNum, colNum]),
+        validMoves: pieceSelected.possibleMoves,
+        clickedCell: [pieceSelected.coord.row, pieceSelected.coord.col],
+        isWhiteTurn: gameState.isWhiteTurn,
+        moveMade: pieceMoved
+      }, void 0, false, {
+        fileName: _jsxFileName,
+        lineNumber: 102,
+        columnNumber: 19
+      }, this)]
+    }, void 0, true, {
+      fileName: _jsxFileName,
+      lineNumber: 100,
+      columnNumber: 15
+    }, this), /*#__PURE__*/Object(react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_6__["jsxDEV"])("div", {
+      className: "game row",
+      children: [/*#__PURE__*/Object(react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_6__["jsxDEV"])("h3", {
+        children: " Display for white side "
+      }, void 0, false, {
+        fileName: _jsxFileName,
+        lineNumber: 112,
+        columnNumber: 19
+      }, this), /*#__PURE__*/Object(react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_6__["jsxDEV"])(_BoardBlackSide__WEBPACK_IMPORTED_MODULE_3__["default"], {
+        piecesArrangement: piecesArrangement,
+        onClick: ([rowNum, colNum]) => handleClick([rowNum, colNum]),
+        validMoves: pieceSelected.possibleMoves,
+        clickedCell: [pieceSelected.coord.row, pieceSelected.coord.col],
+        isWhiteTurn: gameState.isWhiteTurn,
+        moveMade: pieceMoved
+      }, void 0, false, {
+        fileName: _jsxFileName,
+        lineNumber: 113,
+        columnNumber: 23
+      }, this)]
+    }, void 0, true, {
+      fileName: _jsxFileName,
+      lineNumber: 111,
+      columnNumber: 19
+    }, this), /*#__PURE__*/Object(react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_6__["jsxDEV"])("div", {
+      children: /*#__PURE__*/Object(react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_6__["jsxDEV"])("h1", {
+        children: ["Game result: ", _Algorithms__WEBPACK_IMPORTED_MODULE_4__["whoWins"], " "]
+      }, void 0, true, {
+        fileName: _jsxFileName,
+        lineNumber: 123,
+        columnNumber: 14
+      }, this)
+    }, void 0, false, {
+      fileName: _jsxFileName,
+      lineNumber: 122,
+      columnNumber: 11
+    }, this)]
+  }, void 0, true, {
+    fileName: _jsxFileName,
+    lineNumber: 88,
+    columnNumber: 7
+  }, this);
+}
+
+_s(Game, "+/V4Bj1ccK9/tVTsDjJ7wYixfHA=");
+
+_c = Game;
+/* harmony default export */ __webpack_exports__["default"] = (Game);
+
+var _c;
+
+__webpack_require__.$Refresh$.register(_c, "Game");
+
+const currentExports = __react_refresh_utils__.getModuleExports(module.i);
+__react_refresh_utils__.registerExportsForReactRefresh(currentExports, module.i);
+
+if (true) {
+  const isHotUpdate = !!module.hot.data;
+  const prevExports = isHotUpdate ? module.hot.data.prevExports : null;
+
+  if (__react_refresh_utils__.isReactRefreshBoundary(currentExports)) {
+    module.hot.dispose(
+      /**
+       * A callback to performs a full refresh if React has unrecoverable errors,
+       * and also caches the to-be-disposed module.
+       * @param {*} data A hot module data object from Webpack HMR.
+       * @returns {void}
+       */
+      function hotDisposeCallback(data) {
+        // We have to mutate the data object to get data registered and cached
+        data.prevExports = currentExports;
+      }
+    );
+    module.hot.accept(
+      /**
+       * An error handler to allow self-recovering behaviours.
+       * @param {Error} error An error occurred during evaluation of a module.
+       * @returns {void}
+       */
+      function hotErrorHandler(error) {
+        if (
+          typeof __react_refresh_error_overlay__ !== 'undefined' &&
+          __react_refresh_error_overlay__
+        ) {
+          __react_refresh_error_overlay__.handleRuntimeError(error);
+        }
+
+        if (typeof __react_refresh_test__ !== 'undefined' && __react_refresh_test__) {
+          if (window.onHotAcceptError) {
+            window.onHotAcceptError(error.message);
+          }
+        }
+
+        __webpack_require__.c[module.i].hot.accept(hotErrorHandler);
+      }
+    );
+
+    if (isHotUpdate) {
+      if (
+        __react_refresh_utils__.isReactRefreshBoundary(prevExports) &&
+        __react_refresh_utils__.shouldInvalidateReactRefreshBoundary(prevExports, currentExports)
+      ) {
+        module.hot.invalidate();
+      } else {
+        __react_refresh_utils__.enqueueUpdate(
+          /**
+           * A function to dismiss the error overlay after performing React refresh.
+           * @returns {void}
+           */
+          function updateCallback() {
+            if (
+              typeof __react_refresh_error_overlay__ !== 'undefined' &&
+              __react_refresh_error_overlay__
+            ) {
+              __react_refresh_error_overlay__.clearRuntimeErrors();
+            }
+          }
+        );
+      }
+    }
+  } else {
+    if (isHotUpdate && __react_refresh_utils__.isReactRefreshBoundary(prevExports)) {
+      module.hot.invalidate();
+    }
+  }
+}
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@pmmmwh/react-refresh-webpack-plugin/lib/runtime/RefreshUtils.js */ "./node_modules/@pmmmwh/react-refresh-webpack-plugin/lib/runtime/RefreshUtils.js"), __webpack_require__(/*! ./node_modules/react-dev-utils/refreshOverlayInterop.js */ "./node_modules/react-dev-utils/refreshOverlayInterop.js")))
+
+/***/ }),
+
+/***/ "./src/components/GeneralAlgorithms.jsx":
+/*!**********************************************!*\
+  !*** ./src/components/GeneralAlgorithms.jsx ***!
+  \**********************************************/
+/*! exports provided: flippingArrays, arraysIncludeArray, checkEqualArray */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* WEBPACK VAR INJECTION */(function(__react_refresh_utils__, __react_refresh_error_overlay__) {/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "flippingArrays", function() { return flippingArrays; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "arraysIncludeArray", function() { return arraysIncludeArray; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "checkEqualArray", function() { return checkEqualArray; });
+__webpack_require__.$Refresh$.runtime = __webpack_require__(/*! ./node_modules/react-refresh/runtime.js */ "./node_modules/react-refresh/runtime.js");
+__webpack_require__.$Refresh$.setup(module.i);
+
+//jshint esversion:6
+function checkEqualArray(array1, array2) {
+  if (array1.length === array2.length) {
+    var i;
+
+    for (i = 0; i < array1.length; i++) {
+      if (array1[i] !== array2[i]) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+}
+
+function arraysIncludeArray(arrays, oneArray) {
+  var i;
+
+  for (i = 0; i < arrays.length; i++) {
+    if (checkEqualArray(arrays[i], oneArray)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function flippingArrays(arrays) {
+  let newArrays = [];
+  let rowIndex;
+
+  for (rowIndex = arrays.length - 1; rowIndex >= 0; rowIndex--) {
+    newArrays.push(arrays[rowIndex]);
+  }
+
+  return newArrays;
+}
+
+
+
+
+
+const currentExports = __react_refresh_utils__.getModuleExports(module.i);
+__react_refresh_utils__.registerExportsForReactRefresh(currentExports, module.i);
+
+if (true) {
+  const isHotUpdate = !!module.hot.data;
+  const prevExports = isHotUpdate ? module.hot.data.prevExports : null;
+
+  if (__react_refresh_utils__.isReactRefreshBoundary(currentExports)) {
+    module.hot.dispose(
+      /**
+       * A callback to performs a full refresh if React has unrecoverable errors,
+       * and also caches the to-be-disposed module.
+       * @param {*} data A hot module data object from Webpack HMR.
+       * @returns {void}
+       */
+      function hotDisposeCallback(data) {
+        // We have to mutate the data object to get data registered and cached
+        data.prevExports = currentExports;
+      }
+    );
+    module.hot.accept(
+      /**
+       * An error handler to allow self-recovering behaviours.
+       * @param {Error} error An error occurred during evaluation of a module.
+       * @returns {void}
+       */
+      function hotErrorHandler(error) {
+        if (
+          typeof __react_refresh_error_overlay__ !== 'undefined' &&
+          __react_refresh_error_overlay__
+        ) {
+          __react_refresh_error_overlay__.handleRuntimeError(error);
+        }
+
+        if (typeof __react_refresh_test__ !== 'undefined' && __react_refresh_test__) {
+          if (window.onHotAcceptError) {
+            window.onHotAcceptError(error.message);
+          }
+        }
+
+        __webpack_require__.c[module.i].hot.accept(hotErrorHandler);
+      }
+    );
+
+    if (isHotUpdate) {
+      if (
+        __react_refresh_utils__.isReactRefreshBoundary(prevExports) &&
+        __react_refresh_utils__.shouldInvalidateReactRefreshBoundary(prevExports, currentExports)
+      ) {
+        module.hot.invalidate();
+      } else {
+        __react_refresh_utils__.enqueueUpdate(
+          /**
+           * A function to dismiss the error overlay after performing React refresh.
+           * @returns {void}
+           */
+          function updateCallback() {
+            if (
+              typeof __react_refresh_error_overlay__ !== 'undefined' &&
+              __react_refresh_error_overlay__
+            ) {
+              __react_refresh_error_overlay__.clearRuntimeErrors();
+            }
+          }
+        );
+      }
+    }
+  } else {
+    if (isHotUpdate && __react_refresh_utils__.isReactRefreshBoundary(prevExports)) {
+      module.hot.invalidate();
+    }
+  }
+}
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@pmmmwh/react-refresh-webpack-plugin/lib/runtime/RefreshUtils.js */ "./node_modules/@pmmmwh/react-refresh-webpack-plugin/lib/runtime/RefreshUtils.js"), __webpack_require__(/*! ./node_modules/react-dev-utils/refreshOverlayInterop.js */ "./node_modules/react-dev-utils/refreshOverlayInterop.js")))
+
+/***/ }),
+
+/***/ "./src/components/Square.jsx":
+/*!***********************************!*\
+  !*** ./src/components/Square.jsx ***!
+  \***********************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* WEBPACK VAR INJECTION */(function(__react_refresh_utils__, __react_refresh_error_overlay__) {/* harmony import */ var react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react/jsx-dev-runtime */ "./node_modules/react/jsx-dev-runtime.js");
+/* harmony import */ var react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_0__);
+__webpack_require__.$Refresh$.runtime = __webpack_require__(/*! ./node_modules/react-refresh/runtime.js */ "./node_modules/react-refresh/runtime.js");
+__webpack_require__.$Refresh$.setup(module.i);
+
+var _jsxFileName = "C:\\Users\\Home\\Desktop\\software engineering\\personal project\\Chess\\src\\components\\Square.jsx";
+
+
+//jshint esversion:6
+function Square(props) {
+  let selectedPiece = props.piece;
+  let cellColour = props.colour;
+  return /*#__PURE__*/Object(react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_0__["jsxDEV"])("button", {
+    className: "square " + cellColour + " " + selectedPiece,
+    onClick: props.onClick
+  }, void 0, false, {
+    fileName: _jsxFileName,
+    lineNumber: 8,
+    columnNumber: 5
+  }, this);
+}
+
+_c = Square;
+/* harmony default export */ __webpack_exports__["default"] = (Square);
+
+var _c;
+
+__webpack_require__.$Refresh$.register(_c, "Square");
+
+const currentExports = __react_refresh_utils__.getModuleExports(module.i);
+__react_refresh_utils__.registerExportsForReactRefresh(currentExports, module.i);
+
+if (true) {
+  const isHotUpdate = !!module.hot.data;
+  const prevExports = isHotUpdate ? module.hot.data.prevExports : null;
+
+  if (__react_refresh_utils__.isReactRefreshBoundary(currentExports)) {
+    module.hot.dispose(
+      /**
+       * A callback to performs a full refresh if React has unrecoverable errors,
+       * and also caches the to-be-disposed module.
+       * @param {*} data A hot module data object from Webpack HMR.
+       * @returns {void}
+       */
+      function hotDisposeCallback(data) {
+        // We have to mutate the data object to get data registered and cached
+        data.prevExports = currentExports;
+      }
+    );
+    module.hot.accept(
+      /**
+       * An error handler to allow self-recovering behaviours.
+       * @param {Error} error An error occurred during evaluation of a module.
+       * @returns {void}
+       */
+      function hotErrorHandler(error) {
+        if (
+          typeof __react_refresh_error_overlay__ !== 'undefined' &&
+          __react_refresh_error_overlay__
+        ) {
+          __react_refresh_error_overlay__.handleRuntimeError(error);
+        }
+
+        if (typeof __react_refresh_test__ !== 'undefined' && __react_refresh_test__) {
+          if (window.onHotAcceptError) {
+            window.onHotAcceptError(error.message);
+          }
+        }
+
+        __webpack_require__.c[module.i].hot.accept(hotErrorHandler);
+      }
+    );
+
+    if (isHotUpdate) {
+      if (
+        __react_refresh_utils__.isReactRefreshBoundary(prevExports) &&
+        __react_refresh_utils__.shouldInvalidateReactRefreshBoundary(prevExports, currentExports)
+      ) {
+        module.hot.invalidate();
+      } else {
+        __react_refresh_utils__.enqueueUpdate(
+          /**
+           * A function to dismiss the error overlay after performing React refresh.
+           * @returns {void}
+           */
+          function updateCallback() {
+            if (
+              typeof __react_refresh_error_overlay__ !== 'undefined' &&
+              __react_refresh_error_overlay__
+            ) {
+              __react_refresh_error_overlay__.clearRuntimeErrors();
+            }
+          }
+        );
+      }
+    }
+  } else {
+    if (isHotUpdate && __react_refresh_utils__.isReactRefreshBoundary(prevExports)) {
+      module.hot.invalidate();
+    }
+  }
+}
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@pmmmwh/react-refresh-webpack-plugin/lib/runtime/RefreshUtils.js */ "./node_modules/@pmmmwh/react-refresh-webpack-plugin/lib/runtime/RefreshUtils.js"), __webpack_require__(/*! ./node_modules/react-dev-utils/refreshOverlayInterop.js */ "./node_modules/react-dev-utils/refreshOverlayInterop.js")))
+
+/***/ }),
+
+/***/ "./src/index.js":
+/*!**********************!*\
+  !*** ./src/index.js ***!
+  \**********************/
+/*! no exports provided */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* WEBPACK VAR INJECTION */(function(__react_refresh_utils__, __react_refresh_error_overlay__) {/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! react-dom */ "./node_modules/react-dom/index.js");
+/* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react_dom__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _components_Game__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./components/Game */ "./src/components/Game.jsx");
+/* harmony import */ var react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! react/jsx-dev-runtime */ "./node_modules/react/jsx-dev-runtime.js");
+/* harmony import */ var react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_3__);
+__webpack_require__.$Refresh$.runtime = __webpack_require__(/*! ./node_modules/react-refresh/runtime.js */ "./node_modules/react-refresh/runtime.js");
+__webpack_require__.$Refresh$.setup(module.i);
+
+var _jsxFileName = "C:\\Users\\Home\\Desktop\\software engineering\\personal project\\Chess\\src\\index.js";
+//jshint esversion:6
+
+
+
+
+react_dom__WEBPACK_IMPORTED_MODULE_1___default.a.render( /*#__PURE__*/Object(react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_3__["jsxDEV"])(_components_Game__WEBPACK_IMPORTED_MODULE_2__["default"], {}, void 0, false, {
+  fileName: _jsxFileName,
+  lineNumber: 6,
+  columnNumber: 17
+}, undefined), document.getElementById("root"));
+
+const currentExports = __react_refresh_utils__.getModuleExports(module.i);
+__react_refresh_utils__.registerExportsForReactRefresh(currentExports, module.i);
+
+if (true) {
+  const isHotUpdate = !!module.hot.data;
+  const prevExports = isHotUpdate ? module.hot.data.prevExports : null;
+
+  if (__react_refresh_utils__.isReactRefreshBoundary(currentExports)) {
+    module.hot.dispose(
+      /**
+       * A callback to performs a full refresh if React has unrecoverable errors,
+       * and also caches the to-be-disposed module.
+       * @param {*} data A hot module data object from Webpack HMR.
+       * @returns {void}
+       */
+      function hotDisposeCallback(data) {
+        // We have to mutate the data object to get data registered and cached
+        data.prevExports = currentExports;
+      }
+    );
+    module.hot.accept(
+      /**
+       * An error handler to allow self-recovering behaviours.
+       * @param {Error} error An error occurred during evaluation of a module.
+       * @returns {void}
+       */
+      function hotErrorHandler(error) {
+        if (
+          typeof __react_refresh_error_overlay__ !== 'undefined' &&
+          __react_refresh_error_overlay__
+        ) {
+          __react_refresh_error_overlay__.handleRuntimeError(error);
+        }
+
+        if (typeof __react_refresh_test__ !== 'undefined' && __react_refresh_test__) {
+          if (window.onHotAcceptError) {
+            window.onHotAcceptError(error.message);
+          }
+        }
+
+        __webpack_require__.c[module.i].hot.accept(hotErrorHandler);
+      }
+    );
+
+    if (isHotUpdate) {
+      if (
+        __react_refresh_utils__.isReactRefreshBoundary(prevExports) &&
+        __react_refresh_utils__.shouldInvalidateReactRefreshBoundary(prevExports, currentExports)
+      ) {
+        module.hot.invalidate();
+      } else {
+        __react_refresh_utils__.enqueueUpdate(
+          /**
+           * A function to dismiss the error overlay after performing React refresh.
+           * @returns {void}
+           */
+          function updateCallback() {
+            if (
+              typeof __react_refresh_error_overlay__ !== 'undefined' &&
+              __react_refresh_error_overlay__
+            ) {
+              __react_refresh_error_overlay__.clearRuntimeErrors();
+            }
+          }
+        );
+      }
+    }
+  } else {
+    if (isHotUpdate && __react_refresh_utils__.isReactRefreshBoundary(prevExports)) {
+      module.hot.invalidate();
+    }
+  }
+}
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@pmmmwh/react-refresh-webpack-plugin/lib/runtime/RefreshUtils.js */ "./node_modules/@pmmmwh/react-refresh-webpack-plugin/lib/runtime/RefreshUtils.js"), __webpack_require__(/*! ./node_modules/react-dev-utils/refreshOverlayInterop.js */ "./node_modules/react-dev-utils/refreshOverlayInterop.js")))
+
+/***/ }),
+
+/***/ 1:
+/*!**********************************************************************************************************************************************************************************************!*\
+  !*** multi (webpack)/hot/dev-server.js ./node_modules/@pmmmwh/react-refresh-webpack-plugin/client/ReactRefreshEntry.js ./node_modules/react-dev-utils/webpackHotDevClient.js ./src/index.js ***!
+  \**********************************************************************************************************************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+__webpack_require__(/*! C:\Users\Home\Desktop\software engineering\personal project\Chess\node_modules\webpack\hot\dev-server.js */"./node_modules/webpack/hot/dev-server.js");
+__webpack_require__(/*! C:\Users\Home\Desktop\software engineering\personal project\Chess\node_modules\@pmmmwh\react-refresh-webpack-plugin\client\ReactRefreshEntry.js */"./node_modules/@pmmmwh/react-refresh-webpack-plugin/client/ReactRefreshEntry.js");
+__webpack_require__(/*! C:\Users\Home\Desktop\software engineering\personal project\Chess\node_modules\react-dev-utils\webpackHotDevClient.js */"./node_modules/react-dev-utils/webpackHotDevClient.js");
+module.exports = __webpack_require__(/*! C:\Users\Home\Desktop\software engineering\personal project\Chess\src\index.js */"./src/index.js");
+
+
+/***/ })
+
+},[[1,"runtime-main","vendors~main"]]]);
+//# sourceMappingURL=main.chunk.js.map
