@@ -1414,8 +1414,8 @@ function Game() {
     children: [/*#__PURE__*/Object(react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_6__["jsxDEV"])("div", {
       className: "game row",
       children: [/*#__PURE__*/Object(react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_6__["jsxDEV"])("h3", {
-        children: " Chess Game "
-      }, void 0, false, {
+        children: [gameState.isWhiteTurn ? "White's Turn" : "Black's Turn", " "]
+      }, void 0, true, {
         fileName: _jsxFileName,
         lineNumber: 90,
         columnNumber: 7
@@ -1462,7 +1462,7 @@ function Game() {
     }, this), /*#__PURE__*/Object(react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_6__["jsxDEV"])("div", {
       className: "game row",
       children: [/*#__PURE__*/Object(react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_6__["jsxDEV"])("h3", {
-        children: " Display for white side "
+        children: " Display for black side "
       }, void 0, false, {
         fileName: _jsxFileName,
         lineNumber: 112,
